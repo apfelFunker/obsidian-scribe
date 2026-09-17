@@ -282,27 +282,12 @@
   display: inline-block;
 }
 
-.image-embed.scribe-surface .image-resize-corner {
+/* The sheet keeps Obsidian's own corner, so it feels like every other image.
+   The one Obsidian puts there would only change the width, so it steps aside. */
+.image-embed.scribe-surface > .image-resize-corner:not(.scribe-grip) {
   display: none;
 }
 
 .scribe-grip {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--interactive-accent);
-  border-top: 0;
-  border-left: 0;
-  border-bottom-right-radius: 4px;
-  opacity: 0;
-  cursor: nwse-resize;
   touch-action: none;
-  transition: opacity 120ms ease-out;
-}
-
-.image-embed.scribe-surface:hover .scribe-grip,
-.scribe-grip:active {
-  opacity: 1;
 }

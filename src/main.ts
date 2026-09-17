@@ -3,6 +3,7 @@ import { getLanguage, getLinkpath, MarkdownView, Notice, Plugin, setIcon } from 
 
 import { SketchEditor } from './editor/SketchEditor';
 import { withEmbedSize } from './embedSize';
+import { surfaceSize } from './surfaceSize';
 import type { SketchLabels } from './i18n';
 import { labelsFor } from './i18n';
 import { addReadingViewAction, refreshImageSources } from './imageDom';
@@ -29,9 +30,6 @@ const ADDED_CLASSES = [
 /** How large a new sheet is in the note, and how many pixels it really has. */
 const SURFACE_SHOWN = { width: 600, height: 400 };
 const SURFACE_SCALE = 2;
-/** Nothing smaller than this can still be drawn on. */
-const SURFACE_MIN = 80;
-
 /** What this plugin needs from the editor underneath a note. */
 interface SourceEditor {
   posAtDOM(node: Node): number;
@@ -51,7 +49,7 @@ export default class ScribePlugin extends Plugin {
   private pendingDraw: { file: TFile; expires: number } | null = null;
   private readonly documents = new Set<Document>();
   /** Which images are empty sheets, remembered per file and change time. */
-  private readonly surfaces = new Map<string, boolean>();
+  private readonly surfaces = new Map<string, { surface: boolean; drawn: boolean; mtime: number }>();
 
   async onload(): Promise<void> {
     this.labels = labelsFor(getLanguage());
@@ -64,7 +62,7 @@ export default class ScribePlugin extends Plugin {
     this.addCommand({
       id: 'insert-surface',
       name: this.labels.surfaceCommand,
-      hotkeys: [{ modifiers: ['Mod', 'Alt'], key: 'm' }],
+      hotkeys: [{ modifiers: ['Mod', 'Ctrl'], key: 'm' }],
       editorCallback: (editor, context) => void this.insertSurface(editor, context.file?.path ?? ''),
     });
     this.addCommand({
@@ -216,6 +214,9 @@ export default class ScribePlugin extends Plugin {
   private async saveDrawing(sketch: LoadedSketch, elements: readonly SketchElement[]): Promise<boolean> {
     try {
       const saved = await this.store.save(sketch, elements);
+      this.surfaces.delete(saved.path);
+      // The first stroke settles the shape, so what we know has to be fresh.
+      void this.inspect(saved);
       this.refreshImages(saved);
       new Notice(this.labels.saved);
       return true;
@@ -262,21 +263,37 @@ export default class ScribePlugin extends Plugin {
     await this.openForDrawing(file, null);
   }
 
-  /** A sheet can be dragged to any size and shape, unlike a picture. */
+  /**
+   * An empty sheet can be dragged to any shape. Once something is drawn on it
+   * the shape is settled, and dragging only makes it larger or smaller.
+   */
   private addSurfaceGrip(embed: HTMLElement): void {
     if (embed.querySelector('.scribe-grip')) return;
     const file = this.resolveEmbedFile(embed);
     if (!file) return;
-    void this.isSurface(file).then((surface) => {
+    void this.inspect(file).then(({ surface }) => {
       if (!surface || embed.querySelector('.scribe-grip')) return;
       embed.addClass('scribe-surface');
-      const grip = embed.createDiv({ cls: 'scribe-grip', attr: { 'aria-label': this.labels.resize } });
-      let start: { x: number; y: number; width: number; height: number } | null = null;
+      const grip = embed.createDiv({
+        cls: 'image-resize-corner scribe-grip',
+        attr: { 'aria-label': this.labels.resize },
+      });
+      let start: { x: number; y: number; width: number; height: number; keepShape: boolean } | null = null;
       grip.addEventListener('pointerdown', (event) => {
         event.preventDefault();
         event.stopPropagation();
         const box = embed.getBoundingClientRect();
-        start = { x: event.clientX, y: event.clientY, width: box.width, height: box.height };
+        // The size written in the note is the true shape; the box can carry a stray pixel.
+        const noted = { width: Number(embed.getAttribute('width')), height: Number(embed.getAttribute('height')) };
+        const exact = Number.isFinite(noted.width) && noted.width > 0 && Number.isFinite(noted.height) && noted.height > 0;
+        start = {
+          x: event.clientX,
+          y: event.clientY,
+          width: exact ? noted.width : box.width,
+          height: exact ? noted.height : box.height,
+          keepShape: this.drawnOn(file),
+        };
+        void this.inspect(file);
         try {
           grip.setPointerCapture(event.pointerId);
         } catch {
@@ -285,10 +302,8 @@ export default class ScribePlugin extends Plugin {
       });
       grip.addEventListener('pointermove', (event) => {
         if (!start) return;
-        embed.setCssProps({
-          width: `${Math.max(SURFACE_MIN, start.width + event.clientX - start.x)}px`,
-          height: `${Math.max(SURFACE_MIN, start.height + event.clientY - start.y)}px`,
-        });
+        const size = surfaceSize(start, { dx: event.clientX - start.x, dy: event.clientY - start.y }, start.keepShape);
+        embed.setCssProps({ width: `${size.width}px`, height: `${size.height}px` });
       });
       grip.addEventListener('pointerup', (event) => {
         if (!start) return;
@@ -324,21 +339,25 @@ export default class ScribePlugin extends Plugin {
     }
   }
 
-  /** Whether this image is an empty sheet rather than a picture. */
-  private async isSurface(file: TFile): Promise<boolean> {
-    const key = `${file.path}:${file.stat.mtime}`;
-    const known = this.surfaces.get(key);
-    if (known !== undefined) return known;
-    let surface = false;
+  /** Whether this image is an empty sheet, and whether anything is drawn on it. */
+  private async inspect(file: TFile): Promise<{ surface: boolean; drawn: boolean }> {
+    const known = this.surfaces.get(file.path);
+    if (known && known.mtime === file.stat.mtime) return known;
+    let found = { surface: false, drawn: false, mtime: file.stat.mtime };
     try {
       const sketch = await this.store.load(file);
-      surface = sketch.surface;
+      found = { surface: sketch.surface, drawn: sketch.elements.length > 0, mtime: file.stat.mtime };
       sketch.background.close();
     } catch {
-      surface = false;
+      // Not an image this plugin can read; it stays a plain picture.
     }
-    this.surfaces.set(key, surface);
-    return surface;
+    this.surfaces.set(file.path, found);
+    return found;
+  }
+
+  /** What the last look at the file said; the shape settles with the first stroke. */
+  private drawnOn(file: TFile): boolean {
+    return this.surfaces.get(file.path)?.drawn === true;
   }
 
   private resolveEmbedFile(embed: HTMLElement): TFile | null {
