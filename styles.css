@@ -1,0 +1,308 @@
+/* The pen in Obsidian's image viewer sits left of the close button. */
+.lightbox .scribe-lightbox-button {
+  inset-inline-end: calc(var(--size-4-3) * 2 + var(--icon-m) + var(--size-2-2) * 2);
+}
+
+.lightbox.scribe-active .modal-close-button,
+.lightbox.scribe-active .lightbox-titlebar,
+.lightbox.scribe-active .lightbox-media,
+.lightbox.scribe-active .lightbox-controls {
+  visibility: hidden;
+}
+
+.scribe-overlay .lightbox-bg {
+  background-color: var(--lightbox-background);
+  opacity: 0.9;
+}
+
+/* Reading view: a pen over the image, looking like Obsidian's live preview image actions. */
+.markdown-reading-view .image-embed:has(> .scribe-reading-actions) {
+  position: relative;
+  display: inline-block;
+}
+
+.scribe-reading-actions {
+  position: absolute;
+  top: var(--size-4-2);
+  inset-inline-end: var(--size-4-2);
+  display: flex;
+  padding: var(--embed-actions-padding, 2px);
+  background-color: var(--embed-actions-background, var(--background-primary));
+  border-radius: var(--embed-actions-radius, var(--radius-m));
+  box-shadow: var(--embed-actions-shadow, var(--shadow-s));
+  backdrop-filter: var(--embed-actions-backdrop-filter, none);
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+.image-embed:hover > .scribe-reading-actions,
+.scribe-reading-actions:focus-within {
+  opacity: 1;
+}
+
+.scribe-reading-actions .scribe-reading-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+  padding: var(--size-2-2);
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.scribe-reading-actions .scribe-reading-action:hover,
+.scribe-reading-actions .scribe-reading-action:focus-visible {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+}
+
+/* Drawing surface */
+.scribe-host {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.scribe-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: var(--size-4-3);
+  gap: var(--size-4-3);
+  outline: none;
+}
+
+.scribe-toolbar {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 4px;
+  color: var(--text-muted);
+  background-color: color-mix(in srgb, var(--background-primary) 90%, transparent);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-l);
+  backdrop-filter: blur(24px) saturate(1.4);
+  scrollbar-width: none;
+}
+
+.scribe-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.scribe-divider {
+  flex-shrink: 0;
+  width: 1px;
+  height: 20px;
+  margin: 0 6px;
+  background-color: var(--background-modifier-border);
+}
+
+.scribe-toolbar .scribe-button,
+.scribe-toolbar .scribe-swatch {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-width: 0;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.scribe-toolbar .scribe-swatch {
+  width: 28px;
+}
+
+.scribe-toolbar .scribe-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.scribe-toolbar .scribe-button:hover,
+.scribe-toolbar .scribe-button:focus-visible,
+.scribe-toolbar .scribe-swatch:hover,
+.scribe-toolbar .scribe-swatch:focus-visible {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+  box-shadow: none;
+}
+
+.scribe-toolbar .scribe-button.is-active {
+  color: var(--interactive-accent);
+  background-color: color-mix(in srgb, var(--interactive-accent) 16%, transparent);
+}
+
+.scribe-toolbar .scribe-button:disabled,
+.scribe-toolbar .scribe-button:disabled:hover {
+  color: var(--text-faint);
+  background: transparent;
+  cursor: default;
+}
+
+.scribe-swatch-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--scribe-swatch);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-normal) 25%, transparent);
+}
+
+.scribe-toolbar .scribe-swatch.is-active .scribe-swatch-dot {
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--text-normal) 25%, transparent),
+    0 0 0 2px var(--background-primary),
+    0 0 0 4px var(--interactive-accent);
+}
+
+.scribe-width-dot {
+  width: var(--scribe-dot);
+  height: var(--scribe-dot);
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.scribe-toolbar .scribe-cancel,
+.scribe-toolbar .scribe-done {
+  flex-shrink: 0;
+  height: 32px;
+  margin: 0;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-semibold);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.scribe-toolbar .scribe-cancel {
+  color: var(--text-muted);
+  background: transparent;
+}
+
+.scribe-toolbar .scribe-cancel:hover,
+.scribe-toolbar .scribe-cancel:focus-visible {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover);
+}
+
+.scribe-toolbar .scribe-done {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+}
+
+.scribe-toolbar .scribe-done:hover,
+.scribe-toolbar .scribe-done:focus-visible {
+  background-color: var(--interactive-accent-hover);
+}
+
+.scribe-toolbar .scribe-done:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.scribe-stage {
+  position: relative;
+  flex: 1;
+  align-self: stretch;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scribe-canvas {
+  touch-action: none;
+  border-radius: var(--radius-s);
+  cursor: crosshair;
+}
+
+.scribe-canvas[data-tool="select"] {
+  cursor: default;
+}
+
+.scribe-canvas[data-tool="text"] {
+  cursor: text;
+}
+
+.scribe-text-input {
+  position: absolute;
+  min-width: 2ch;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  white-space: pre;
+  resize: none;
+  background: transparent;
+  border: 1px dashed var(--interactive-accent);
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+}
+
+/* A sheet with nothing behind it: the editor shows a chequered ground so the
+   drawing area is visible, and the note gets a grip for size and shape. */
+.scribe-stage.is-surface .scribe-canvas {
+  background-color: #1e1e1e;
+  background-image:
+    linear-gradient(45deg, rgb(255 255 255 / 4%) 25%, transparent 25%),
+    linear-gradient(-45deg, rgb(255 255 255 / 4%) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgb(255 255 255 / 4%) 75%),
+    linear-gradient(-45deg, transparent 75%, rgb(255 255 255 / 4%) 75%);
+  background-size: 22px 22px;
+  background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+}
+
+.image-embed.scribe-surface {
+  position: relative;
+  display: inline-block;
+}
+
+.image-embed.scribe-surface .image-resize-corner {
+  display: none;
+}
+
+.scribe-grip {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--interactive-accent);
+  border-top: 0;
+  border-left: 0;
+  border-bottom-right-radius: 4px;
+  opacity: 0;
+  cursor: nwse-resize;
+  touch-action: none;
+  transition: opacity 120ms ease-out;
+}
+
+.image-embed.scribe-surface:hover .scribe-grip,
+.scribe-grip:active {
+  opacity: 1;
+}

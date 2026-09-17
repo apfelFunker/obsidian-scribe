@@ -1,0 +1,10 @@
+{
+  "id": "scribe",
+  "name": "Scribe",
+  "version": "0.1.0",
+  "minAppVersion": "1.13.0",
+  "description": "Draw, mark up and write on images and on empty surfaces, right inside your notes.",
+  "author": "Julius Paetzke",
+  "authorUrl": "https://github.com/apfelFunker",
+  "isDesktopOnly": true
+}
