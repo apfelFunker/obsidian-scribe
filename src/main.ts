@@ -3,7 +3,6 @@ import { getLanguage, getLinkpath, MarkdownView, Notice, Plugin, setIcon } from 
 
 import { SketchEditor } from './editor/SketchEditor';
 import { withEmbedSize } from './embedSize';
-import { surfaceSize } from './surfaceSize';
 import type { SketchLabels } from './i18n';
 import { labelsFor } from './i18n';
 import { addReadingViewAction, refreshImageSources } from './imageDom';
@@ -11,6 +10,7 @@ import { migrateExcalidrawAnnotations } from './migration/ExcalidrawMigration';
 import type { SketchElement } from './sketch/elements';
 import type { LoadedSketch } from './SketchStore';
 import { SketchStore } from './SketchStore';
+import { addFreeGrip } from './surfaceGrip';
 
 interface DrawingSession {
   editor: SketchEditor;
@@ -28,7 +28,12 @@ const ADDED_CLASSES = [
   'scribe-grip',
 ];
 /** How large a new sheet is in the note, and how many pixels it really has. */
-const SURFACE_SHOWN = { width: 600, height: 400 };
+/**
+ * A new sheet comes in the shape of a screen, and is dragged from there. It has
+ * to fit a note's column: anything wider is squeezed by Obsidian, and the sheet
+ * would arrive in a shape nobody asked for.
+ */
+const SURFACE_SHOWN = { width: 480, height: 270 };
 const SURFACE_SCALE = 2;
 /** What this plugin needs from the editor underneath a note. */
 interface SourceEditor {
@@ -216,13 +221,26 @@ export default class ScribePlugin extends Plugin {
       const saved = await this.store.save(sketch, elements);
       this.surfaces.delete(saved.path);
       // The first stroke settles the shape, so what we know has to be fresh.
-      void this.inspect(saved);
+      void this.inspect(saved).then(({ surface, drawn }) => {
+        if (surface) this.markDrawnSurfaces(saved, drawn);
+      });
       this.refreshImages(saved);
       new Notice(this.labels.saved);
       return true;
     } catch {
       new Notice(this.labels.saveFailed);
       return false;
+    }
+  }
+
+  /** A sheet that now holds something loses its outline and its free corner. */
+  private markDrawnSurfaces(file: TFile, drawn: boolean): void {
+    for (const doc of this.documents) {
+      doc.querySelectorAll<HTMLElement>('.image-embed.scribe-surface').forEach((embed) => {
+        if (this.resolveEmbedFile(embed)?.path !== file.path) return;
+        embed.toggleClass('scribe-empty', !drawn);
+        if (drawn) embed.querySelector('.scribe-grip')?.remove();
+      });
     }
   }
 
@@ -251,7 +269,10 @@ export default class ScribePlugin extends Plugin {
     }
   }
 
-  /** Puts an empty sheet at the cursor and opens it for drawing right away. */
+  /**
+   * Puts an empty sheet at the cursor, in the shape of a screen. Its size and
+   * shape are set by the corner; the pen in the image bar opens it for drawing.
+   */
   private async insertSurface(editor: Editor, sourcePath: string): Promise<void> {
     const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ').replace(':', '.');
     const name = `${this.labels.surfaceName} ${stamp}.png`;
@@ -260,62 +281,35 @@ export default class ScribePlugin extends Plugin {
     const size = `${SURFACE_SHOWN.width}x${SURFACE_SHOWN.height}`;
     const link = this.app.fileManager.generateMarkdownLink(file, sourcePath, undefined, size);
     editor.replaceSelection(link.startsWith('!') ? link : `!${link}`);
-    await this.openForDrawing(file, null);
   }
 
   /**
    * An empty sheet can be dragged to any shape. Once something is drawn on it
    * the shape is settled, and dragging only makes it larger or smaller.
    */
+  /**
+   * An empty sheet gets a corner of its own, so its width and height can be set
+   * freely before anything is drawn. It sits in Obsidian's own image wrapper,
+   * right on the sheet, and steps aside for Obsidian's corner once the sheet
+   * holds something: from then on it scales like any other image.
+   */
   private addSurfaceGrip(embed: HTMLElement): void {
-    if (embed.querySelector('.scribe-grip')) return;
     const file = this.resolveEmbedFile(embed);
     if (!file) return;
-    void this.inspect(file).then(({ surface }) => {
-      if (!surface || embed.querySelector('.scribe-grip')) return;
+    void this.inspect(file).then(({ surface, drawn }) => {
+      const image = embed.querySelector('img');
+      const wrapper = embed.querySelector<HTMLElement>('.image-wrapper') ?? embed;
+      if (!surface || !image) return;
+      // The state sits on the embed, so it reaches Obsidian's own corner wherever
+      // in there Obsidian hangs it.
       embed.addClass('scribe-surface');
-      const grip = embed.createDiv({
-        cls: 'image-resize-corner scribe-grip',
-        attr: { 'aria-label': this.labels.resize },
-      });
-      let start: { x: number; y: number; width: number; height: number; keepShape: boolean } | null = null;
-      grip.addEventListener('pointerdown', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        const box = embed.getBoundingClientRect();
-        // The size written in the note is the true shape; the box can carry a stray pixel.
-        const noted = { width: Number(embed.getAttribute('width')), height: Number(embed.getAttribute('height')) };
-        const exact = Number.isFinite(noted.width) && noted.width > 0 && Number.isFinite(noted.height) && noted.height > 0;
-        start = {
-          x: event.clientX,
-          y: event.clientY,
-          width: exact ? noted.width : box.width,
-          height: exact ? noted.height : box.height,
-          keepShape: this.drawnOn(file),
-        };
-        void this.inspect(file);
-        try {
-          grip.setPointerCapture(event.pointerId);
-        } catch {
-          // Capture only helps the pointer stay with the grip; dragging works without it.
-        }
-      });
-      grip.addEventListener('pointermove', (event) => {
-        if (!start) return;
-        const size = surfaceSize(start, { dx: event.clientX - start.x, dy: event.clientY - start.y }, start.keepShape);
-        embed.setCssProps({ width: `${size.width}px`, height: `${size.height}px` });
-      });
-      grip.addEventListener('pointerup', (event) => {
-        if (!start) return;
-        start = null;
-        try {
-          grip.releasePointerCapture(event.pointerId);
-        } catch {
-          // Never captured, so nothing to let go of.
-        }
-        const box = embed.getBoundingClientRect();
-        this.writeSize(embed, box.width, box.height);
-      });
+      embed.toggleClass('scribe-empty', !drawn);
+      if (drawn) {
+        // The sheet holds something: Obsidian's own corner scales it from here.
+        embed.querySelector('.scribe-grip')?.remove();
+        return;
+      }
+      addFreeGrip(wrapper, image, this.labels.resize, (size) => this.writeSize(embed, size.width, size.height));
     });
   }
 
@@ -355,10 +349,6 @@ export default class ScribePlugin extends Plugin {
     return found;
   }
 
-  /** What the last look at the file said; the shape settles with the first stroke. */
-  private drawnOn(file: TFile): boolean {
-    return this.surfaces.get(file.path)?.drawn === true;
-  }
 
   private resolveEmbedFile(embed: HTMLElement): TFile | null {
     const source = embed.getAttribute('src');
@@ -396,3 +386,4 @@ function matching(root: HTMLElement, selector: string): Set<HTMLElement> {
   root.querySelectorAll<HTMLElement>(selector).forEach((element) => found.add(element));
   return found;
 }
+

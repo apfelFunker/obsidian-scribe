@@ -277,17 +277,22 @@
   background-position: 0 0, 0 11px, 11px -11px, -11px 0;
 }
 
-.image-embed.scribe-surface {
-  position: relative;
-  display: inline-block;
-}
-
-/* The sheet keeps Obsidian's own corner, so it feels like every other image.
-   The one Obsidian puts there would only change the width, so it steps aside. */
-.image-embed.scribe-surface > .image-resize-corner:not(.scribe-grip) {
+/* An empty sheet gets a corner of its own, in Obsidian's image wrapper and so
+   right on the sheet. Obsidian's own corner would only change the width, and it
+   sits in the same spot, so it steps aside wherever in the embed it hangs. */
+.image-embed.scribe-surface.scribe-empty .image-resize-corner:not(.scribe-grip) {
   display: none;
 }
 
 .scribe-grip {
   touch-action: none;
+}
+
+/* An empty sheet is see-through, so an outline shows where it is and how big
+   it is. The first stroke gives it something of its own to show. */
+.image-embed.scribe-surface.scribe-empty .image-wrapper,
+.image-embed.scribe-surface.scribe-empty:not(:has(.image-wrapper)) {
+  outline: 1px dashed var(--background-modifier-border-hover);
+  outline-offset: -1px;
+  border-radius: var(--image-radius, var(--radius-s));
 }

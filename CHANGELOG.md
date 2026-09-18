@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- A new surface is no longer opened for drawing straight away: it arrives as an
+  empty 16:9 sheet, is sized and shaped by its corner, and opens with the pen in
+  the image bar like any other image. While it is empty a dashed outline shows
+  where it is.
+- The corner of an empty surface now sits in Obsidian's own image wrapper, right
+  on the sheet, and changes the sheet instead of the block around it. Once the
+  sheet holds something, it steps aside for Obsidian's own corner, which scales
+  it like any other image.
+
 ## 0.1.0
 
 The first release.
