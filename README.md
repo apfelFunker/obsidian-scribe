@@ -1,55 +1,57 @@
-# Scribe for Obsidian
+<h1>
+  <img alt="Scribe" src="./docs/assets/scribe-mark.png" width="72" valign="middle">
+  &nbsp;Scribe
+</h1>
 
-Draw on your images without leaving your notes — and draw where there is no image at all.
+Scribe lets you draw on the images in your notes, and on empty sheets where there is no image at all. It puts a pen next to Obsidian's own image buttons: click it, and the picture opens for freehand strokes, lines, arrows, boxes, ellipses and text.
 
-![Drawing on a surface in Obsidian: toolbar with tools, colours and widths above a transparent sheet](docs/drawing.png)
+Everything you draw stays editable. Come back a week later and move the arrow, recolour the circle, or take it all off again — the picture you started from is still underneath.
 
-Scribe puts a pen next to Obsidian's own image buttons. Click it and the image opens for drawing: freehand strokes, lines, arrows, rectangles, ellipses and text. Everything stays editable — come back a week later and move the arrow you drew.
+![Scribe's editor over a transparent sheet: the toolbar with tools, colours and widths, and a circle, an arrow, a box and a freehand line drawn in red](./docs/assets/hero.png)
 
-## Features
+## Get started
 
-**A pen wherever an image is.** In the image action bar next to *Zoom in*, on images in reading view, and in Obsidian's image viewer.
+### Requirements
 
-**Surfaces — drawing without a picture.** `Cmd/Ctrl + Ctrl + M` drops an empty, transparent sheet at the cursor and opens it for drawing. It behaves like any other image in your note, and it carries no background, so your theme shows through.
+Scribe runs on **Obsidian 1.13 or newer**, on the **desktop app**. It sits in Obsidian's own image action bar and writes to image files, which the mobile apps do not allow in the same way.
 
-**A shape that settles.** While a surface is empty, its corner grip sets width and height freely — make it wide, make it tall. The first stroke settles the shape: from then on the grip scales it without distorting what you drew.
-
-**Drawings that stay editable.** Strokes, shapes and text are kept inside the image file, so you can reopen and change them. The picture you started from is kept untouched in the same file; remove every element and save, and it comes back.
-
-**Drawing that behaves itself.**
-
-- Freehand strokes are smoothed without rounding off sharp corners.
-- Lines snap to 45° steps, boxes snap to squares, and edges and centres snap to other objects with guides.
-- Hold <kbd>Shift</kbd> to force a snap, <kbd>Cmd/Ctrl</kbd> to ignore all of them.
-- Click a text with the text tool to edit it. With any other tool, a click picks up what you hit instead of drawing over it.
-
-**Excalidraw annotations can move over.** A command converts images annotated with the Excalidraw plugin into Scribe drawings.
-
-## How your drawings are stored
-
-A drawing is written into the image itself, as two private PNG chunks: `skDt` holds the editable elements, `skOr` holds the original picture. The result is an ordinary PNG — it shows the drawing everywhere: in Obsidian, in Finder, on the web, in an export. Nothing is stored beside your vault, and nothing breaks if the plugin is gone.
-
-Images that are not PNG become PNG on the first save, and Obsidian updates the links for you.
-
-## Installing
+### Install
 
 Scribe is not in the community plugin list yet.
 
-**With BRAT** (updates itself): add `apfelFunker/obsidian-scribe` in *BRAT → Add beta plugin*.
+With [BRAT](https://github.com/TfTHacker/obsidian42-brat), which keeps it up to date: add `apfelFunker/obsidian-scribe` under *BRAT → Add beta plugin*.
 
-**By hand:**
+By hand:
 
 1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/apfelFunker/obsidian-scribe/releases/latest).
 2. Put them in `<your vault>/.obsidian/plugins/scribe/`.
 3. Turn on **Scribe** in *Settings → Community plugins*.
 
-## Using it
+### Draw on your first image
+
+Hover an image in a note and click the pen in the buttons that appear. Draw, then press **Done**. The drawing is saved into the image file, and the note shows it straight away.
+
+### Draw where there is no image
+
+Press `Cmd/Ctrl + Ctrl + M`. An empty, transparent 16:9 sheet lands at your cursor. Drag its corner into the shape you want — while the sheet is empty, width and height move freely — then open it with the pen and draw.
+
+## What you can do
+
+**Reach the pen from anywhere an image is shown.** In the image action bar next to *Zoom in*, on images in reading view, and in Obsidian's image viewer.
+
+**Keep a sheet's shape once it matters.** An empty sheet takes any shape you drag it into. The first stroke settles it: from then on Obsidian's own corner scales the sheet without distorting what you drew.
+
+**Draw without fighting the tool.** Freehand strokes are smoothed, but sharp corners stay sharp. Lines snap to 45° steps, boxes snap to squares, and edges and centres snap to other objects with guides. Hold <kbd>Shift</kbd> to force a snap, <kbd>Cmd/Ctrl</kbd> to ignore every one of them.
+
+**Pick things up instead of drawing over them.** With any tool, a click takes hold of what you hit; only a drag draws. Click a text with the text tool and you are editing it again.
+
+**Bring Excalidraw annotations along.** A command converts images annotated with the Excalidraw plugin into Scribe drawings.
 
 | | |
 | --- | --- |
-| Draw on an image | Click the pen: in the image's action bar, in reading view, or in the image viewer |
-| New empty surface | `Cmd/Ctrl + Ctrl + M`, or the command *Insert drawing surface* |
-| Resize a surface | Drag its corner — free while empty, proportional once drawn on |
+| Draw on an image | The pen: in the image's action bar, in reading view, or in the image viewer |
+| New empty sheet | `Cmd/Ctrl + Ctrl + M`, or the command *Insert drawing surface* |
+| Resize a sheet | Drag its corner — free while empty, proportional once drawn on |
 | Tools | <kbd>V</kbd> select · <kbd>P</kbd> pen · <kbd>L</kbd> line · <kbd>A</kbd> arrow · <kbd>R</kbd> rectangle · <kbd>O</kbd> ellipse · <kbd>T</kbd> text |
 | Undo / redo | `Cmd/Ctrl + Z` · `Cmd/Ctrl + Shift + Z` |
 | Delete selection | <kbd>Backspace</kbd> |
@@ -57,11 +59,13 @@ Scribe is not in the community plugin list yet.
 
 The hotkey is free to change in *Settings → Hotkeys*.
 
-## Good to know
+## Where your drawings live
 
-- **Desktop only** for now: drawing uses the image viewer and the file handling of the desktop app.
-- **Obsidian 1.13 or newer**, because the pen sits in Obsidian's own image action bar.
-- **Your files stay yours.** Scribe writes only to the image you draw on, and only when you press *Done*.
+A drawing is written into the image itself, in two private PNG chunks: `skDt` holds the editable elements, `skOr` holds the original picture. What comes out is an ordinary PNG — it shows the drawing everywhere: in Obsidian, in Finder, on the web, in an export. Nothing is stored beside your vault, and nothing breaks if the plugin is gone. Remove every element and save, and the original picture is back.
+
+Images that are not PNG become PNG on the first save, and Obsidian updates the links for you.
+
+Scribe writes only to the image you draw on, and only when you press *Done*.
 
 ## Building it yourself
 
@@ -76,8 +80,10 @@ Then copy `main.js`, `manifest.json` and `styles.css` into `<vault>/.obsidian/pl
 
 ## Contributing
 
-Bug reports and ideas are welcome in the [issues](https://github.com/apfelFunker/obsidian-scribe/issues). If you send a pull request, please keep the tests green — every behaviour in `src/` that can be tested without Obsidian has a test in `tests/unit/`.
+Bug reports and ideas are welcome in the [issues](https://github.com/apfelFunker/obsidian-scribe/issues). If you send a pull request, please keep the tests green: every behaviour in `src/` that can be tested without Obsidian has a test in `tests/unit/`.
 
 ## Licence
 
 MIT — see [LICENSE](LICENSE).
+
+Scribe is a community plugin. It is not made or endorsed by the Obsidian team, and the app icon in the mark above is theirs.
