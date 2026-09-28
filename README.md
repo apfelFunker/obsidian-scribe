@@ -31,19 +31,31 @@ By hand:
 
 Hover an image in a note and click the pen in the buttons that appear. Draw, then press **Done**. The drawing is saved into the image file, and the note shows it straight away.
 
+![The pen in Obsidian's image action bar, next to Zoom in, on a chart in a note](./docs/assets/pen-in-image-bar.png)
+
+![The same note after drawing: a circle and an arrow mark the summer peak, a box marks the cold months](./docs/assets/annotated-note.png)
+
 ### Draw where there is no image
 
 Press `Cmd/Ctrl + Ctrl + M`. An empty, transparent 16:9 sheet lands at your cursor. Drag its corner into the shape you want — while the sheet is empty, width and height move freely — then open it with the pen and draw.
 
+![An empty sheet in a note, outlined, with its corner for resizing](./docs/assets/empty-sheet.png)
+
+![A sheet with a hand-drawn plan: three boxes joined by arrows, a tick and a note](./docs/assets/sketch-on-sheet.png)
+
 ## What you can do
 
 **Reach the pen from anywhere an image is shown.** In the image action bar next to *Zoom in*, on images in reading view, and in Obsidian's image viewer.
+
+![Obsidian's image viewer with Scribe's pen in its top-right corner](./docs/assets/pen-in-image-viewer.png)
 
 **Keep a sheet's shape once it matters.** An empty sheet takes any shape you drag it into. The first stroke settles it: from then on Obsidian's own corner scales the sheet without distorting what you drew.
 
 **Draw without fighting the tool.** Freehand strokes are smoothed, but sharp corners stay sharp. Lines snap to 45° steps, boxes snap to squares, and edges and centres snap to other objects with guides. Hold <kbd>Shift</kbd> to force a snap, <kbd>Cmd/Ctrl</kbd> to ignore every one of them.
 
 **Pick things up instead of drawing over them.** With any tool, a click takes hold of what you hit; only a drag draws. Click a text with the text tool and you are editing it again.
+
+![The editor reopened on a drawing from last week: every circle, arrow and text is still a separate, editable object](./docs/assets/editor-reopened.png)
 
 **Bring Excalidraw annotations along.** A command converts images annotated with the Excalidraw plugin into Scribe drawings.
 
@@ -62,6 +74,8 @@ The hotkey is free to change in *Settings → Hotkeys*.
 ## Where your drawings live
 
 A drawing is written into the image itself, in two private PNG chunks: `skDt` holds the editable elements, `skOr` holds the original picture. What comes out is an ordinary PNG — it shows the drawing everywhere: in Obsidian, in Finder, on the web, in an export. Nothing is stored beside your vault, and nothing breaks if the plugin is gone. Remove every element and save, and the original picture is back.
+
+![Left: the original chart, kept inside the file. Right: the same file with the drawing on top](./docs/assets/original-kept.png)
 
 Images that are not PNG become PNG on the first save, and Obsidian updates the links for you.
 
